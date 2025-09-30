@@ -1,0 +1,55 @@
+import { SaveBasketUsecase } from "../app/save-basket.usecase";
+import cors from "cors";
+import express, { Request, Response } from "express";
+import { InMemoryBasketRepository } from "../test/in-memory-basket.repository";
+import { v4 as uuidv4 } from "uuid";
+import { CalculPriceUsecase } from "../app/calcul-price.usecase";
+import { StubReductionCodeGateway } from "../test/stub-reduction-code.gateway";
+import { Basket } from "./infra/basket.repository";
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+const basketRepository = new InMemoryBasketRepository();
+const idGenerator = {
+  generate: () => {
+    return uuidv4();
+  },
+};
+
+const reductionsGateway = new StubReductionCodeGateway();
+const saveBasketUsecase = new SaveBasketUsecase(
+  basketRepository,
+  new CalculPriceUsecase(reductionsGateway),
+  idGenerator
+);
+
+app.get("/baskets", (request: Request, response: Response) => {
+  return response.json(basketRepository.baskets);
+});
+
+app.post("/baskets", async (request: Request, response: Response) => {
+  const products = request.body.products;
+
+  if (!products || products.length <= 1)
+    return response.status(500).json({ message: "Products is required" });
+
+  await saveBasketUsecase.handle(products, request.body.reductionCode);
+
+  const basket = basketRepository.baskets.find((basket: Basket) => {
+    return basket.products === products;
+  });
+
+  if (!basket) throw new Error("Basket not found");
+
+  return response.status(201).json(basket);
+});
+
+app.delete("/baskets/:id", async (request: Request, response: Response) => {
+  const id = request.params.id;
+  await basketRepository.remove(id);
+  return response.status(204).send();
+});
+
+export default app;
