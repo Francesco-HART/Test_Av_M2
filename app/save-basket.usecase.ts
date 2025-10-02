@@ -1,6 +1,6 @@
 import { Basket, BasketRepository } from "./basket.repository";
 import { CalculPriceUsecase } from "./calcul-price.usecase";
-import { ProductsType } from "./reduction.gateway";
+import { CodesTypes, ProductsType } from "./reduction.gateway";
 import { IDGenerator } from "./id-generator.provider";
 
 export class SaveBasketUsecase {
@@ -16,7 +16,7 @@ export class SaveBasketUsecase {
       type: ProductsType;
       price: number;
     }[],
-    reductionCode: string
+    reductionCode: CodesTypes
   ): Promise<void> {
     const totalPrice = await this.calculPriceUsecase.handle(
       products,
