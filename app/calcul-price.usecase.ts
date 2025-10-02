@@ -1,114 +1,85 @@
-import { ProductsType, ReductionGateway } from "./reduction.gateway";
+import { Clock } from "test/calcul-basket.usecase.test";
+import {
+  CodesTypes,
+  ProductsType,
+  ReductionGateway,
+} from "./reduction.gateway";
+import { isWithinInterval } from "date-fns";
 
+export type Product = {
+  name: string;
+  quantity: number;
+  type: ProductsType;
+  price: number;
+};
 export class CalculPriceUsecase {
-  constructor(private readonly reductionGateway: ReductionGateway) {}
-  async handle(
-    products: {
-      name: string;
-      quantity: number;
-      type: ProductsType;
-      price: number;
-    }[],
-    reductionCode: string
-  ): Promise<number> {
-    const reduction = await this.reductionGateway.getReductionByCode(
-      reductionCode
-    );
+  constructor(
+    private readonly reductionGateway: ReductionGateway,
+    private readonly clock: Clock
+  ) {}
+  async handle(products: Product[], code?: CodesTypes): Promise<number> {
+    let totalPrice = products.reduce((prev, next) => {
+      return prev + next.price * next.quantity;
+    }, 0);
 
-    if (reduction && reduction.reductionPrice) {
-      let price = this.additionPrices(products);
-      if (reduction.reductionPrice > price) return price;
-      return this.applyPercentageDiscount(price, reduction.reductionPrice);
-    }
+    if (!code) return totalPrice;
 
-    if (reduction && reduction.productType && reduction.discountPercentage) {
-      return this.applyreductionForSpecifyProduct(
-        products,
-        reduction.productType,
-        reduction.discountPercentage
-      );
-    }
+    const reduction = await this.reductionGateway.getReductionByCode(code);
+    if (!reduction) return totalPrice;
 
-    if (reduction && reduction.discountPercentage)
-      return this.applyPercentageDiscount(
-        this.additionPrices(products),
-        reduction?.discountPercentage
-      );
-
-    if (reduction && reduction.discountEuro)
-      return this.applyEuroDiscount(
-        this.additionPrices(products),
-        reduction?.discountEuro
-      );
-
-    if (reduction && reduction.freeProduct)
-      return this.applyFreeProduct(products);
-
-    return this.additionPrices(products);
+    return applyReduction(reduction.type)({
+      totalPrice,
+      now: this.clock.getNow(),
+      reductionAmount: reduction.amount,
+      products,
+      eligibleProduct: reduction.eligibleProduct,
+    });
   }
+}
 
-  private applyreductionForSpecifyProduct(
-    products: {
-      name: string;
-      quantity: number;
-      type: ProductsType;
-      price: number;
-    }[],
+function applyReduction(
+  type: "DISCOUNT_EURO" | "DISCOUNT_PERCENT" | "ONE_FREE" | "BLACK_FRIDAY"
+): (params: {
+  totalPrice: number;
+  now: Date;
+  reductionAmount?: number;
+  products?: Product[];
+  eligibleProduct?: ProductsType;
+}) => number {
+  switch (type) {
+    case "BLACK_FRIDAY":
+      return ({ totalPrice, now }) => {
+        if (
+          isWithinInterval(now, {
+            start: new Date("2025-11-28T00:00:00Z"),
+            end: new Date("2025-11-30T23:59:59Z"),
+          })
+        )
+          return totalPrice / 2;
+        return totalPrice;
+      };
 
-    productTypeReduction: ProductsType,
-    discountPercentage: number
-  ) {
-    let productsSameType = products.filter(
-      (product) => product.type === productTypeReduction
-    );
+    case "ONE_FREE":
+      return ({ products, eligibleProduct, totalPrice }) => {
+        const eligibleProductFind = products?.find(
+          (p) => p.type === eligibleProduct
+        );
+        if (eligibleProductFind && eligibleProductFind.quantity > 1)
+          return totalPrice - eligibleProductFind.price;
+        return totalPrice;
+      };
 
-    let productNotSameType = products.filter(
-      (product) => product.type !== productTypeReduction
-    );
+    case "DISCOUNT_EURO":
+      return (params) => {
+        const reducePrice = params.totalPrice - (params.reductionAmount || 0);
+        return Math.max(reducePrice, 1);
+      };
 
-    let productSameTypeReduction = this.applyPercentageDiscount(
-      this.additionPrices(productsSameType),
-      discountPercentage
-    );
+    case "DISCOUNT_PERCENT":
+      return ({ totalPrice, reductionAmount }) =>
+        totalPrice - totalPrice * ((reductionAmount ?? 0) / 100);
 
-    return this.additionPrices(productNotSameType) + productSameTypeReduction;
-  }
-
-  private additionPrices(
-    products: { price: number; quantity: number }[]
-  ): number {
-    return products.reduce(
-      (total, product) => total + product.price * product.quantity,
-      0
-    );
-  }
-
-  applyPercentageDiscount(price: number, discountPercentage: number): number {
-    const discountAmount = (price * discountPercentage) / 100;
-    return price - discountAmount;
-  }
-
-  applyEuroDiscount(price: number, discountInEuro: number): number {
-    return Math.max(0, price - discountInEuro);
-  }
-
-  findCheapestProduct(
-    products: { price: number; quantity: number }[]
-  ): { price: number } | null {
-    if (products.length === 0) return null;
-    return products.reduce(
-      (cheapest, product) =>
-        product.price < cheapest.price ? product : cheapest,
-      products[0]
-    );
-  }
-
-  applyFreeProduct(products: { price: number; quantity: number }[]): number {
-    const total = this.additionPrices(products);
-    const cheapestProduct = this.findCheapestProduct(products);
-    if (cheapestProduct) {
-      return total - cheapestProduct.price;
-    }
-    return total;
+    default:
+      return (params) => params.totalPrice;
   }
 }

@@ -1,4 +1,4 @@
-import { Basket, BasketRepository } from "../api/infra/basket.repository";
+import { Basket, BasketRepository } from "./basket.repository";
 import { CalculPriceUsecase } from "./calcul-price.usecase";
 import { ProductsType } from "./reduction.gateway";
 import { IDGenerator } from "./id-generator.provider";

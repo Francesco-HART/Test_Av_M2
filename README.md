@@ -22,14 +22,14 @@ On cherche à calculer le prix d'un panier lors d'une commande en ligne. La comm
 Les codes promo peuvent être de plusieurs types :
 
 - Une réduction en pourcentage (-10% sur la commande)
-- Une réduction fixe (30€ d'offert)
+- Une réduction fixe (30€ d'offert) min 1€ la commande
 - Un produit acheté, un produit offert (ex : un t-shirt acheté = un t-shirt offert).
+
 - Black Friday
 
   - 50% sur tout le panier
-  - Uniquement entre le vendredi 00h00 et le lundi 23h59 du week-end du Black Friday.
-  - Ne peut pas amener le total en dessous de 1 € symbolique.
-
+  - Uniquement entre le vendredi 00h00 et le lundi 23h59 du week-end du Black Friday le 2025-28-11 au 2025-30-11.
+  - Ne peut pas amener le total en dessous de 1 euro.
   - Cumulable avec d’autres promotions
 
 Les réductions s’appliquent dans l’ordre défini par l’entreprise : d’abord les promos “produit”, ensuite les promos fixes/%, et enfin Black Friday.

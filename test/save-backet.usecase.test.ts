@@ -1,24 +1,27 @@
-import { CalculPriceUsecase } from "@/calcul-price.usecase";
+import { CalculPriceUsecase } from "../app/calcul-price.usecase";
 import { beforeEach, describe, expect, it } from "vitest";
 import { productBuilder } from "./product.builder";
 import { StubReductionCodeGateway } from "./stub-reduction-code.gateway";
-import { SaveBasketUsecase } from "@/save-basket.usecase";
+import { SaveBasketUsecase } from "../app/save-basket.usecase";
 import { InMemoryBasketRepository } from "./in-memory-basket.repository";
 import { StubIDGenerator } from "./stub-id-generator.provider";
-import { Basket } from "api/infra/basket.repository";
+import { Basket } from "../app/basket.repository";
+import { StubClock } from "./calcul-basket.usecase.test";
 
 describe("Feature save basket", () => {
   let saveBasketUsecase: SaveBasketUsecase;
   let reductionsGateway: StubReductionCodeGateway;
   let idGenerator: StubIDGenerator;
+  let clock: StubClock;
   let basketRepository: InMemoryBasketRepository;
   beforeEach(() => {
     reductionsGateway = new StubReductionCodeGateway();
     idGenerator = new StubIDGenerator();
+    clock = new StubClock(new Date());
     basketRepository = new InMemoryBasketRepository();
     saveBasketUsecase = new SaveBasketUsecase(
       basketRepository,
-      new CalculPriceUsecase(reductionsGateway),
+      new CalculPriceUsecase(reductionsGateway, clock),
       idGenerator
     );
   });

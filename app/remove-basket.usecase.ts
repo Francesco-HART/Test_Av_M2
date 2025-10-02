@@ -1,4 +1,4 @@
-import { BasketRepository } from "api/infra/basket.repository";
+import { BasketRepository } from "../app/basket.repository";
 
 export class RemoveBasketUsecase {
   constructor(private basketRepository: BasketRepository) {}

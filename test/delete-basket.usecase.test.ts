@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { productBuilder } from "./product.builder";
 import { InMemoryBasketRepository } from "./in-memory-basket.repository";
-import { Basket } from "api/infra/basket.repository";
+import { Basket } from "@/basket.repository";
 import { RemoveBasketUsecase } from "@/remove-basket.usecase";
 
 describe("Feature remove basket", () => {

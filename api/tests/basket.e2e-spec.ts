@@ -1,5 +1,5 @@
 import { ProductsType } from "../../app/reduction.gateway";
-import app from "../routes";
+import app from "../controllers/routes";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 

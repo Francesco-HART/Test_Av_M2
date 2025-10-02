@@ -10,7 +10,7 @@ import {
 } from "setup-integration-tests/docker-postgresql-manager";
 import knexConfig from "setup-integration-tests/knexfile";
 import { KnexBasketRepository } from "../knex-basket.repository";
-import { Basket } from "../basket.repository";
+import { Basket } from "../../../app/basket.repository";
 import { ProductsType } from "../../../app/reduction.gateway";
 
 describe("Knex basket repository", () => {

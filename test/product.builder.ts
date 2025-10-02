@@ -1,4 +1,4 @@
-import { ProductsType } from "@/reduction.gateway";
+import { ProductsType } from "../app/reduction.gateway";
 
 export class productBuilder {
   product = {

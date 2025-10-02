@@ -1,11 +1,11 @@
-import { SaveBasketUsecase } from "../app/save-basket.usecase";
+import { SaveBasketUsecase } from "../../app/save-basket.usecase";
 import cors from "cors";
 import express, { Request, Response } from "express";
-import { InMemoryBasketRepository } from "../test/in-memory-basket.repository";
+import { InMemoryBasketRepository } from "../../test/in-memory-basket.repository";
 import { v4 as uuidv4 } from "uuid";
-import { CalculPriceUsecase } from "../app/calcul-price.usecase";
-import { StubReductionCodeGateway } from "../test/stub-reduction-code.gateway";
-import { Basket } from "./infra/basket.repository";
+import { CalculPriceUsecase } from "../../app/calcul-price.usecase";
+import { Basket } from "../../app/basket.repository";
+import { ReelReductionCodeGateway } from "../infra/reel-reduction.gateway";
 
 const app = express();
 app.use(express.json());
@@ -18,15 +18,27 @@ const idGenerator = {
   },
 };
 
-const reductionsGateway = new StubReductionCodeGateway();
+const reductionsGateway = new ReelReductionCodeGateway();
+
+const calculate = new CalculPriceUsecase(reductionsGateway);
 const saveBasketUsecase = new SaveBasketUsecase(
   basketRepository,
-  new CalculPriceUsecase(reductionsGateway),
+  calculate,
   idGenerator
 );
 
 app.get("/baskets", (request: Request, response: Response) => {
   return response.json(basketRepository.baskets);
+});
+
+app.post("/totalPrice", async (request: Request, response: Response) => {
+  const codes = new Set(request.body.reductionCodes);
+  const totalPrice = await calculate.handle(
+    request.body.products,
+    Array.from(codes) as string[]
+  );
+
+  return response.json(totalPrice);
 });
 
 app.post("/baskets", async (request: Request, response: Response) => {

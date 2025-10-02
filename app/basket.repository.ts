@@ -1,4 +1,4 @@
-import { ProductsType } from "@/reduction.gateway";
+import { ProductsType } from "./reduction.gateway";
 
 export interface BasketRepository {
   remove(id: string): Promise<void>;

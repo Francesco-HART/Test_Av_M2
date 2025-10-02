@@ -1,4 +1,4 @@
-import { Basket, BasketRepository } from "api/infra/basket.repository";
+import { Basket, BasketRepository } from "@/basket.repository";
 
 export class InMemoryBasketRepository implements BasketRepository {
   public baskets: Basket[] = [];

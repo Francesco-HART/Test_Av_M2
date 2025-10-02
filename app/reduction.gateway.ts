@@ -1,17 +1,27 @@
 export interface ReductionGateway {
-  getReductionByCode(code: string): Promise<ReductionType>;
+  getReductionByCode(code: CodesTypes): Promise<ReductionType | undefined>;
 }
 
 export type ReductionType = {
-  code: string;
-  discountEuro?: number;
-  discountPercentage?: number;
-  freeProduct?: boolean;
-  productType?: ProductsType;
-  reductionPrice?: number;
+  type: Reductions;
+  amount: number;
+  eligibleProduct?: ProductsType;
 };
+
+export type Reductions =
+  | "DISCOUNT_EURO"
+  | "DISCOUNT_PERCENT"
+  | "ONE_FREE"
+  | "BLACK_FRIDAY";
 
 export enum ProductsType {
   TSHIRT = "TSHIRT",
   PULL = "PULL",
 }
+
+export type CodesTypes =
+  | "BLACKFRIDAY"
+  | "ONEFREEPULL"
+  | "DISCOUNTEURO30"
+  | "DISCOUNTEURO10"
+  | "DISCOUNTPERCENT10";

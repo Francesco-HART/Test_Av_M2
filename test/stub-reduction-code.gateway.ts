@@ -1,4 +1,4 @@
-import { ReductionGateway, ReductionType } from "@/reduction.gateway";
+import { ReductionGateway, ReductionType } from "../app/reduction.gateway";
 
 export class StubReductionCodeGateway implements ReductionGateway {
   reduction: ReductionType | undefined;

@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { Basket, BasketRepository } from "./basket.repository";
+import { Basket, BasketRepository } from "../../app/basket.repository";
 
 export class KnexBasketRepository implements BasketRepository {
   constructor(private sqlConnection: Knex) {}

@@ -1,65 +1,60 @@
 import { CalculPriceUsecase } from "@/calcul-price.usecase";
 import { beforeEach, describe, expect, it } from "vitest";
 import { productBuilder } from "./product.builder";
-import {
-  ProductsType,
-  ReductionGateway,
-  ReductionType,
-} from "@/reduction.gateway";
+import { ProductsType, ReductionType } from "../app/reduction.gateway";
 import { StubReductionCodeGateway } from "./stub-reduction-code.gateway";
+
+export interface Clock {
+  getNow(): Date;
+}
+
+export class StubClock implements Clock {
+  constructor(public date: Date) {}
+
+  getNow(): Date {
+    return this.date;
+  }
+}
 
 describe("Feature calcul basket", () => {
   let calculPriceUsecase: CalculPriceUsecase;
   let reductionsGateway: StubReductionCodeGateway;
+  let clock: StubClock;
+  let now = new Date("2025-11-27");
   beforeEach(() => {
     reductionsGateway = new StubReductionCodeGateway();
-    calculPriceUsecase = new CalculPriceUsecase(reductionsGateway);
+    clock = new StubClock(now);
+    calculPriceUsecase = new CalculPriceUsecase(reductionsGateway, clock);
   });
 
   describe("Calcul price for product", () => {
     it("I have one product", async () => {
-      const expectPrice = await calculPriceUsecase.handle(
-        [new productBuilder().withQuantity(1).withPrice(1).build()],
-        ""
-      );
+      const expectPrice = await calculPriceUsecase.handle([
+        new productBuilder().withQuantity(1).withPrice(1).build(),
+      ]);
 
       const price = 1;
-      expect(expectPrice).toBe(price);
+      expect(expectPrice).toEqual(price);
     });
 
     it("There is two products", async () => {
-      const expectPrice = await calculPriceUsecase.handle(
-        [
-          new productBuilder()
-            .withName("product1")
-            .withQuantity(1)
-            .withPrice(1)
-            .build(),
+      const expectPrice = await calculPriceUsecase.handle([
+        new productBuilder().withQuantity(1).withPrice(1).build(),
+        new productBuilder().withQuantity(1).withPrice(1).build(),
+      ]);
 
-          new productBuilder()
-            .withName("product2")
-            .withQuantity(1)
-            .withPrice(2)
-            .build(),
-        ],
-        ""
-      );
-
-      const price = 3;
-      expect(expectPrice).toBe(price);
+      const price = 2;
+      expect(expectPrice).toEqual(price);
     });
 
     it("There is two same products", async () => {
-      const expectPrice = await calculPriceUsecase.handle(
-        [
-          new productBuilder()
-            .withName("product2")
-            .withQuantity(2)
-            .withPrice(1)
-            .build(),
-        ],
-        ""
-      );
+      const expectPrice = await calculPriceUsecase.handle([
+        new productBuilder()
+          .withName("product2")
+          .withQuantity(2)
+          .withPrice(1)
+          .build(),
+      ]);
 
       const price = 2;
       expect(expectPrice).toBe(price);
@@ -67,84 +62,63 @@ describe("Feature calcul basket", () => {
   });
 
   describe("Apply promotion code", () => {
-    it("Apply promotion of 30%", async () => {
+    it("Apply promotion of 10%", async () => {
       givenReductionCodeExist({
-        code: "1",
-        discountPercentage: 10,
+        type: "DISCOUNT_PERCENT",
+        amount: 10,
       });
 
       const expectPrice = await calculPriceUsecase.handle(
         [
           new productBuilder().withName("product2").withPrice(10).build(),
-
           new productBuilder().withName("product2").withPrice(10).build(),
         ],
-        "1"
+        "DISCOUNTPERCENT10"
       );
-
       const price = 18;
       expect(price).toBe(expectPrice);
     });
 
     it("Promotion of 10€", async () => {
       givenReductionCodeExist({
-        code: "1",
-        discountEuro: 10,
+        type: "DISCOUNT_EURO",
+        amount: 10,
       });
       const expectPrice = await calculPriceUsecase.handle(
         [
           new productBuilder().withName("product1").withPrice(10).build(),
-
           new productBuilder().withName("product2").withPrice(10).build(),
         ],
-        "1"
+        "DISCOUNTEURO10"
       );
-
       const price = 10;
       expect(price).toBe(expectPrice);
     });
 
     it("Promotion of 30€ and price is 20€", async () => {
       givenReductionCodeExist({
-        code: "1",
-        discountEuro: 30,
+        type: "DISCOUNT_EURO",
+        amount: 30,
       });
       const expectPrice = await calculPriceUsecase.handle(
         [
-          new productBuilder().withName("product1").withPrice(10).build(),
-
-          new productBuilder().withName("product2").withPrice(10).build(),
+          new productBuilder()
+            .withName("product1")
+            .withPrice(10)
+            .withQuantity(2)
+            .build(),
         ],
-        "1"
+        "DISCOUNTEURO30"
       );
-
-      const price = 0;
+      const price = 1;
       expect(price).toBe(expectPrice);
     });
 
     it("Promotion of one buy one free product ", async () => {
       givenReductionCodeExist({
-        code: "1",
-        freeProduct: true,
-      });
-      const expectPrice = await calculPriceUsecase.handle(
-        [
-          new productBuilder().withName("product1").withPrice(15).build(),
-
-          new productBuilder().withName("product2").withPrice(10).build(),
-        ],
-        "1"
-      );
-
-      const price = 15;
-      expect(price).toBe(expectPrice);
-    });
-
-    it("Promotion of 10% apply only for tshirt", async () => {
-      givenReductionCodeExist({
-        code: "1",
-        discountPercentage: 10,
-        productType: ProductsType.TSHIRT,
+        type: "ONE_FREE",
+        amount: 0,
+        eligibleProduct: ProductsType.PULL,
       });
       const expectPrice = await calculPriceUsecase.handle(
         [
@@ -152,48 +126,168 @@ describe("Feature calcul basket", () => {
             .withName("product1")
             .withType(ProductsType.PULL)
             .withPrice(10)
-            .build(),
-          new productBuilder()
-            .withName("product2")
-            .withType(ProductsType.TSHIRT)
-            .withPrice(10)
+            .withQuantity(2)
             .build(),
         ],
-        "1"
+        "ONEFREEPULL"
       );
-
-      const price = 19;
+      const price = 10;
       expect(price).toBe(expectPrice);
     });
 
-    it("Promotion of 10% for 30€ order", async () => {
+    it("Promotion of one buy one free product with no eligible products ", async () => {
       givenReductionCodeExist({
-        code: "1",
-        discountPercentage: 10,
-        reductionPrice: 30,
+        type: "ONE_FREE",
+        amount: 0,
+        eligibleProduct: ProductsType.PULL,
       });
       const expectPrice = await calculPriceUsecase.handle(
         [
           new productBuilder()
             .withName("product1")
-            .withType(ProductsType.PULL)
-            .withPrice(10)
-            .build(),
-          new productBuilder()
-            .withName("product2")
             .withType(ProductsType.TSHIRT)
             .withPrice(10)
+            .withQuantity(2)
             .build(),
         ],
-        "1"
+        "ONEFREEPULL"
       );
-
       const price = 20;
       expect(price).toBe(expectPrice);
     });
+
+    it("Promotion of one buy one free product with only one eligible product ", async () => {
+      givenReductionCodeExist({
+        type: "ONE_FREE",
+        amount: 0,
+        eligibleProduct: ProductsType.PULL,
+      });
+      const expectPrice = await calculPriceUsecase.handle(
+        [
+          new productBuilder()
+            .withName("product1")
+            .withType(ProductsType.PULL)
+            .withPrice(10)
+            .withQuantity(1)
+            .build(),
+
+          new productBuilder()
+            .withName("product1")
+            .withType(ProductsType.TSHIRT)
+            .withPrice(10)
+            .withQuantity(2)
+            .build(),
+        ],
+        "ONEFREEPULL"
+      );
+      const price = 30;
+      expect(price).toBe(expectPrice);
+    });
+
+    it("Promotion of one buy one free product with only one eligible product ", async () => {
+      givenReductionCodeExist({
+        type: "ONE_FREE",
+        amount: 0,
+        eligibleProduct: ProductsType.PULL,
+      });
+      const expectPrice = await calculPriceUsecase.handle(
+        [
+          new productBuilder()
+            .withName("product1")
+            .withType(ProductsType.TSHIRT)
+            .withPrice(20)
+            .withQuantity(1)
+            .build(),
+          new productBuilder()
+            .withName("product1")
+            .withType(ProductsType.PULL)
+            .withPrice(10)
+            .withQuantity(2)
+            .build(),
+        ],
+        "ONEFREEPULL"
+      );
+      const price = 30;
+      expect(price).toBe(expectPrice);
+    });
+
+    describe("Black Friday reduction", () => {
+      it("Apply black friday reduction", async () => {
+        givenReductionCodeExist({
+          type: "BLACK_FRIDAY",
+          amount: 0,
+        });
+
+        givenNowIs(new Date("2025-11-28T00:00:00Z"));
+
+        const expectPrice = await calculPriceUsecase.handle(
+          [
+            new productBuilder()
+              .withName("product1")
+              .withType(ProductsType.TSHIRT)
+              .withPrice(20)
+              .withQuantity(1)
+              .build(),
+          ],
+          "BLACKFRIDAY"
+        );
+        const price = 10;
+        expect(price).toBe(expectPrice);
+      });
+
+      it("Apply black friday reduction only between friday and saturday 2025-11", async () => {
+        givenReductionCodeExist({
+          type: "BLACK_FRIDAY",
+          amount: 0,
+        });
+
+        givenNowIs(new Date("2025-12-01T00:00:00Z"));
+
+        const expectPrice = await calculPriceUsecase.handle(
+          [
+            new productBuilder()
+              .withName("product1")
+              .withType(ProductsType.TSHIRT)
+              .withPrice(20)
+              .withQuantity(1)
+              .build(),
+          ],
+          "BLACKFRIDAY"
+        );
+        const price = 20;
+        expect(expectPrice).toBe(price);
+      });
+    });
+
+    // it("Apply black friday reduction with another reduction", async () => {
+    //   givenReductionCodeExist({
+    //     type: "BLACK_FRIDAY",
+    //     amount: 0,
+    //   });
+
+    //   givenNowIs(new Date("2025-11-28T00:00:00Z"));
+
+    //   const expectPrice = await calculPriceUsecase.handle(
+    //     [
+    //       new productBuilder()
+    //         .withName("product1")
+    //         .withType(ProductsType.TSHIRT)
+    //         .withPrice(20)
+    //         .withQuantity(1)
+    //         .build(),
+    //     ],
+    //     ["BLACK_FRIDAY", "DISCOUNT_EURO"]
+    //   );
+    //   const price = 10;
+    //   expect(price).toBe(expectPrice);
+    // });
   });
 
   function givenReductionCodeExist(reductionCode: ReductionType) {
     reductionsGateway.reduction = reductionCode;
+  }
+
+  function givenNowIs(now: Date) {
+    clock.date = now;
   }
 });
