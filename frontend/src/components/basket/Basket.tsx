@@ -7,7 +7,7 @@ import { basketApi } from "@/services/api.ts";
 
 export default function Basket() {
   const [basketProducts, setBasketProducts] = useState<Product[]>(productsStub);
-  const [appliedCoupons, setAppliedCoupons] = useState<string[]>([]);
+  const [appliedCoupon, setAppliedCoupon] = useState<string>("");
   const [totalPrice, setTotalPrice] = useState<number | null>(null);
   const [subtotal, setSubtotal] = useState<number>(0);
 
@@ -28,14 +28,14 @@ export default function Basket() {
     try {
       const calculatedPrice = await basketApi.calculateTotalPrice(
         apiProducts,
-        appliedCoupons
+        appliedCoupon || undefined
       );
       setTotalPrice(calculatedPrice);
     } catch (error) {
       console.error("Error calculating price:", error);
       setTotalPrice(null);
     }
-  }, [basketProducts, appliedCoupons]);
+  }, [basketProducts, appliedCoupon]);
 
   useEffect(() => {
     calculatePrices();
@@ -59,12 +59,12 @@ export default function Basket() {
   };
 
   const handleAddCoupon = (couponCode: string) => {
-    if (!couponCode.trim() || appliedCoupons.includes(couponCode)) return;
-    setAppliedCoupons([...appliedCoupons, couponCode]);
+    if (!couponCode.trim()) return;
+    setAppliedCoupon(couponCode);
   };
 
-  const handleRemoveCoupon = (couponCode: string) => {
-    setAppliedCoupons(appliedCoupons.filter((c) => c !== couponCode));
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon("");
   };
 
   return (
@@ -77,7 +77,7 @@ export default function Basket() {
       <BasketTotal
         subtotal={subtotal}
         totalPrice={totalPrice}
-        appliedCoupons={appliedCoupons}
+        appliedCoupon={appliedCoupon}
         onAddCoupon={handleAddCoupon}
         onRemoveCoupon={handleRemoveCoupon}
       />

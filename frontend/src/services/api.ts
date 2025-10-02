@@ -27,11 +27,11 @@ export type Basket = {
 export const basketApi = {
   calculateTotalPrice: async (
     products: Product[],
-    reductionCodes?: string[]
+    reductionCode?: string
   ): Promise<number> => {
     const response = await apiClient.post<number>("/totalPrice", {
       products,
-      reductionCodes: reductionCodes || [],
+      reductionCode: reductionCode || "",
     });
 
     console.log("Calculated total price:", response.data);

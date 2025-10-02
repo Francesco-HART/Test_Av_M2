@@ -14,15 +14,15 @@ import { availableDiscountCodes } from "@/data/discounts.ts";
 export default function BasketTotal({
   subtotal,
   totalPrice,
-  appliedCoupons,
+  appliedCoupon,
   onAddCoupon,
   onRemoveCoupon,
 }: {
   subtotal: number;
   totalPrice: number | null;
-  appliedCoupons: string[];
+  appliedCoupon: string;
   onAddCoupon: (couponCode: string) => void;
-  onRemoveCoupon: (couponCode: string) => void;
+  onRemoveCoupon: () => void;
 }) {
   const [couponInput, setCouponInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -33,7 +33,7 @@ export default function BasketTotal({
     (coupon) =>
       couponInput &&
       coupon.toLowerCase().includes(couponInput.toLowerCase()) &&
-      !appliedCoupons.includes(coupon)
+      coupon !== appliedCoupon
   );
 
   useEffect(() => {
@@ -42,6 +42,7 @@ export default function BasketTotal({
   }, [couponInput, filteredCoupons.length]);
 
   const handleAddCoupon = (code?: string) => {
+    if (appliedCoupon) return; // Ne pas ajouter si un coupon est déjà appliqué
     const codeToAdd = code || couponInput;
     if (codeToAdd.trim()) {
       onAddCoupon(codeToAdd);
@@ -109,11 +110,13 @@ export default function BasketTotal({
                 )
               }
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              disabled={!!appliedCoupon}
             />
             <Button
               size="sm"
               className="h-6 gap-1"
               onClick={() => handleAddCoupon()}
+              disabled={!!appliedCoupon}
             >
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -138,20 +141,17 @@ export default function BasketTotal({
             </div>
           )}
         </div>
-        {appliedCoupons.length > 0 && (
+        {appliedCoupon && (
           <div className="flex justify-between">
-            <span>Coupons appliqués</span>
+            <span>Coupon appliqué</span>
             <div className="flex gap-1 flex-wrap justify-end">
-              {appliedCoupons.map((coupon) => (
-                <Badge
-                  key={coupon}
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={() => onRemoveCoupon(coupon)}
-                >
-                  {coupon} ✕
-                </Badge>
-              ))}
+              <Badge
+                variant="secondary"
+                className="cursor-pointer"
+                onClick={onRemoveCoupon}
+              >
+                {appliedCoupon} ✕
+              </Badge>
             </div>
           </div>
         )}

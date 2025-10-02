@@ -20,7 +20,11 @@ const idGenerator = {
 
 const reductionsGateway = new ReelReductionCodeGateway();
 
-const calculate = new CalculPriceUsecase(reductionsGateway);
+const clock = {
+  getNow: () => new Date(),
+};
+
+const calculate = new CalculPriceUsecase(reductionsGateway, clock);
 const saveBasketUsecase = new SaveBasketUsecase(
   basketRepository,
   calculate,
@@ -32,10 +36,9 @@ app.get("/baskets", (request: Request, response: Response) => {
 });
 
 app.post("/totalPrice", async (request: Request, response: Response) => {
-  const codes = new Set(request.body.reductionCodes);
   const totalPrice = await calculate.handle(
     request.body.products,
-    Array.from(codes) as string[]
+    request.body.reductionCode
   );
 
   return response.json(totalPrice);
