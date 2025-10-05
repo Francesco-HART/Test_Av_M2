@@ -6,3 +6,7 @@ export type Product = {
   type: ProductsType;
   price: number;
 };
+
+export type Discount = {
+  type: string;
+};
