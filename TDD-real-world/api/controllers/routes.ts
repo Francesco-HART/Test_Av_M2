@@ -28,7 +28,11 @@ const calculate = new CalculPriceUsecase(reductionsGateway, clock);
 const saveBasketUsecase = new SaveBasketUsecase(
   basketRepository,
   calculate,
-  idGenerator
+  idGenerator,
+  {
+    send: (email: { to: string; name: "BASKET_SAVED"; message: string }) =>
+      console.log(email),
+  }
 );
 
 app.get("/baskets", (request: Request, response: Response) => {
