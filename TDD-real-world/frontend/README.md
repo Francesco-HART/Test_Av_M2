@@ -53,5 +53,31 @@ npx playwright test --debug
 ```
 
 **Prérequis:**
-- Le serveur frontend doit tourner (`npm run dev`)
 - Installer les navigateurs Playwright: `npx playwright install`
+- Le serveur frontend démarre automatiquement (configuré dans `playwright.config.ts`)
+
+**⚠️ Stack complète requise pour tous les tests:**
+
+Certains tests (calcul du prix avec coupon) nécessitent le backend + base de données:
+
+```bash
+# Terminal 1: Démarrer PostgreSQL (Docker)
+cd ../setup-integration-tests
+docker-compose -f docker-compose-postgresql-test.yaml up -d
+
+# Terminal 2: Démarrer le backend
+cd ..
+npm run dev  # Écoute sur http://localhost:3000
+
+# Terminal 3: Lancer les tests E2E
+cd frontend
+npx playwright test
+```
+
+| Tests | Sans backend | Avec backend |
+|-------|--------------|--------------|
+| Affichage panier | ✅ | ✅ |
+| Interactions UI | ✅ | ✅ |
+| Calcul prix avec coupon | ❌ | ✅ |
+
+**Résultat attendu:** 13 tests passent avec le stack complet
