@@ -26,7 +26,6 @@ Les codes promo peuvent être de plusieurs types :
 - Un produit acheté, un produit offert (ex : un t-shirt acheté = un t-shirt offert).
 
 - Black Friday
-
   - 50% sur tout le panier
   - Uniquement entre le vendredi 00h00 et le lundi 23h59 du week-end du Black Friday le 2025-28-11 au 2025-30-11.
   - Ne peut pas amener le total en dessous de 1 euro.
@@ -44,5 +43,3 @@ Ils peuvent aussi avoir des conditions d'applications :
 
 - Calculer le montant final du panier après l'application des coupons dans le back
 - Utiliser l'API dans le front
-
-# BaBack-test
