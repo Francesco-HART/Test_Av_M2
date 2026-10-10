@@ -1,18 +1,30 @@
-# Baback Interview Frontend
+# Frontend E-Commerce
 
-Le code à modifier se situe essentiellement dans `components/basket`.  
-Le dossier `data` contient des données de demo et des exemples de types
+## Structure
 
-### What's in
+- `components/basket/` : Composants du panier à tester
+- `data/` : Données de demo et types
+- `e2e/` : Tests end-to-end Playwright (à créer)
 
-- React + Vite
-- TypeScript
-- UI: Shadcn
-- Some useful libs
+## Stack
 
-### Run
+- React + Vite + TypeScript
+- UI: Shadcn/ui
+- Tests: Playwright
 
-```
+## Commandes
+
+```bash
 npm i
-npm run dev
+npm run dev           # Lancer le serveur de dev
+npm run test:e2e      # Lancer les tests Playwright
+npm run test:e2e:ui   # Lancer avec interface graphique
 ```
+
+## Objectif
+
+Tester l'interface du panier :
+
+- Affichage des produits
+- Application des codes promo
+- Calcul du montant final
