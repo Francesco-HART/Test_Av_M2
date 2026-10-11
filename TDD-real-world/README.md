@@ -51,13 +51,53 @@ On cherche à calculer le prix d'un panier lors d'une commande en ligne. La comm
 - Réduction si la commande dépasse x€ (exemple : -10% dès 30€ d'achats)
 - Un code promo ne doit jamais faire descendre le total sous 0
 
+### 2. Sauvegarder un panier
+
+Créer `SaveBasketUsecase` qui :
+- Calcule le prix total du panier
+- Génère un identifiant unique
+- Sauvegarde le panier en base de données
+- Envoie une notification email de confirmation
+
+### 3. Supprimer un panier
+
+Créer `RemoveBasketUsecase` qui :
+- Supprime un panier par son identifiant
+
+### 4. Lister les paniers
+
+Exposer une route GET pour récupérer tous les paniers sauvegardés.
+
+---
+
+## API REST
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/baskets` | Liste tous les paniers |
+| POST | `/baskets` | Crée et sauvegarde un panier |
+| DELETE | `/baskets/:id` | Supprime un panier |
+
+---
+
 ### Étapes suggérées
 
-1. **Tests unitaires** : Implémenter `CalculPriceUsecase` en TDD dans `test/`
-2. **Tests d'intégration** : Implémenter le repository avec PostgreSQL (`*.it-spec.ts`)
+1. **Tests unitaires** : Implémenter les use cases en TDD dans `test/`
+   - `calcul-price.usecase.test.ts`
+   - `save-basket.usecase.test.ts`
+   - `remove-basket.usecase.test.ts`
+
+2. **Tests d'intégration** : Implémenter le repository PostgreSQL (`*.it-spec.ts`)
+   - `basket.repository.it-spec.ts`
+
 3. **Tests E2E** : Implémenter les routes API (`*.e2e-spec.ts`)
+   - `basket.e2e-spec.ts`
+
+---
 
 ### TLDR
 
-- Calculer le montant final du panier après l'application des coupons dans le back
-- Utiliser l'API dans le front
+- Calculer le montant final du panier après l'application des coupons
+- Sauvegarder et supprimer des paniers
+- Exposer une API REST
+- Utiliser l'API dans le frontend
