@@ -86,27 +86,53 @@ Utiliser **Supertest** pour tester les routes HTTP.
 
 Fichier : `api/tests/basket.e2e-spec.ts`
 
-**Scénarios à tester :**
+### Tests à implémenter
 
-- `GET /baskets` : Retourne la liste des paniers
-- `POST /baskets` : Crée un panier avec produits
-- `POST /baskets` avec code promo : Applique la réduction
-- `DELETE /baskets/:id` : Supprime un panier existant
+#### GET /baskets
 
-**Exemple de structure :**
+| # | Test | Description | Status |
+|---|------|-------------|--------|
+| 1 | Retourne tous les paniers | Après création d'un panier, GET retourne la liste avec ce panier | 200 |
+
+#### POST /baskets
+
+| # | Test | Description | Status |
+|---|------|-------------|--------|
+| 2 | Créer un panier simple | 1 produit (qty: 1, price: 20), vérifie `totalPrice: 20` et `id` généré | 201 |
+| 3 | Créer un panier multi-produits | T-Shirt (qty: 2, price: 15) + Pull (qty: 1, price: 25) = `totalPrice: 55` | 201 |
+| 4 | Créer un panier avec code promo | Avec `reductionCode`, vérifie que `totalPrice` est calculé | 201 |
+| 5 | Panier vide | Envoyer `products: []` retourne erreur "Products is required" | 400/500 |
+
+#### DELETE /baskets/:id
+
+| # | Test | Description | Status |
+|---|------|-------------|--------|
+| 6 | Supprimer un panier | Créer → Supprimer → GET retourne liste vide | 204 |
+| 7 | Supprimer le bon panier | Créer 2 paniers → Supprimer le 1er → GET retourne uniquement le 2ème | 204 |
+
+### Exemple de code
 
 ```typescript
 import request from "supertest";
 import app from "../controllers/routes";
+import { ProductsType } from "../../app/reduction.gateway";
 
-describe("Baskets API", () => {
-  it("should create a basket", async () => {
+describe("POST /baskets", () => {
+  it("should create a basket successfully", async () => {
+    const basketData = {
+      products: [
+        { name: "T-Shirt", quantity: 2, type: ProductsType.TSHIRT, price: 15 }
+      ],
+      reductionCode: ""
+    };
+
     const response = await request(app)
       .post("/baskets")
-      .send({ products: [...], reductionCode: "" })
+      .send(basketData)
       .expect(201);
 
     expect(response.body.totalPrice).toBe(30);
+    expect(response.body.id).toBeDefined();
   });
 });
 ```
