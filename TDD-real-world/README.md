@@ -80,6 +80,39 @@ Exposer une route GET pour récupérer tous les paniers sauvegardés.
 
 ---
 
+## Tests E2E API (Backend)
+
+Utiliser **Supertest** pour tester les routes HTTP.
+
+Fichier : `api/tests/basket.e2e-spec.ts`
+
+**Scénarios à tester :**
+
+- `GET /baskets` : Retourne la liste des paniers
+- `POST /baskets` : Crée un panier avec produits
+- `POST /baskets` avec code promo : Applique la réduction
+- `DELETE /baskets/:id` : Supprime un panier existant
+
+**Exemple de structure :**
+
+```typescript
+import request from "supertest";
+import app from "../controllers/routes";
+
+describe("Baskets API", () => {
+  it("should create a basket", async () => {
+    const response = await request(app)
+      .post("/baskets")
+      .send({ products: [...], reductionCode: "" })
+      .expect(201);
+
+    expect(response.body.totalPrice).toBe(30);
+  });
+});
+```
+
+---
+
 ### Étapes suggérées
 
 1. **Tests unitaires** : Implémenter les use cases en TDD dans `test/`
