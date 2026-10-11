@@ -22,6 +22,58 @@ npm run test:e2e            # Tests end-to-end (Docker requis)
 npm run test:mutate         # Mutation testing (Stryker)
 ```
 
+---
+
+## Configuration Testcontainers
+
+Le dossier `setup-integration-tests/` contient la configuration pour les tests avec Docker.
+
+### Fichiers de configuration
+
+| Fichier | Description |
+|---------|-------------|
+| `docker-compose-postgresql-test.yaml` | Définit le container PostgreSQL (image, port 5433, credentials) |
+| `knexfile.ts` | Configuration Knex pour connexion à la BDD (dev, test, prod) |
+| `docker-postgresql-manager.ts` | Fonctions pour démarrer/arrêter Docker et reset la BDD |
+| `vitest-integration.config.js` | Config Vitest pour les fichiers `*.it-spec.ts` |
+| `vitest-e2e.config.js` | Config Vitest pour les fichiers `*.e2e-spec.ts` |
+| `migrations/` | Scripts SQL pour créer les tables (baskets, products) |
+
+### Prérequis
+
+```bash
+# Docker doit être installé et lancé
+docker --version
+docker info
+
+# Pré-télécharger l'image PostgreSQL (optionnel, évite l'attente au 1er test)
+docker pull postgres:13.2
+```
+
+### Lancer les tests
+
+```bash
+# Tests d'intégration (lance PostgreSQL automatiquement)
+npm run test:integration
+
+# Tests E2E API
+npm run test:e2e
+```
+
+### Ce qui se passe automatiquement
+
+1. **beforeAll** : `startDockerPostgresql()` lance le container PostgreSQL + exécute les migrations
+2. **beforeEach** : `resetDB()` vide les tables (TRUNCATE) pour isoler chaque test
+3. **afterAll** : `stopDockerPostgresql()` arrête et supprime le container
+
+### Créer une nouvelle migration
+
+```bash
+npm run knex migrate:make nom_de_la_migration
+```
+
+---
+
 ### Objectif
 
 On cherche à calculer le prix d'un panier lors d'une commande en ligne. La commande contient un panier avec des articles, et un ou plusieurs codes promo.
