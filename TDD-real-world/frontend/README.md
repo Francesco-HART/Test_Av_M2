@@ -22,6 +22,7 @@ npm run dev
 Les tests end-to-end vérifient le comportement de l'application du point de vue utilisateur.
 
 **Fichiers de tests:**
+
 - `e2e/basket.spec.ts` - Tests du panier (4 tests)
   - Affichage initial des produits
   - Calcul du sous-total
@@ -38,6 +39,7 @@ Les tests end-to-end vérifient le comportement de l'application du point de vue
   - Navigation clavier dans les suggestions
 
 **Lancer les tests:**
+
 ```bash
 # Mode headless
 npx playwright test
@@ -53,6 +55,7 @@ npx playwright test --debug
 ```
 
 **Prérequis:**
+
 - Installer les navigateurs Playwright: `npx playwright install`
 - Le serveur frontend démarre automatiquement (configuré dans `playwright.config.ts`)
 
@@ -73,11 +76,3 @@ npm run dev  # Écoute sur http://localhost:3000
 cd frontend
 npx playwright test
 ```
-
-| Tests | Sans backend | Avec backend |
-|-------|--------------|--------------|
-| Affichage panier | ✅ | ✅ |
-| Interactions UI | ✅ | ✅ |
-| Calcul prix avec coupon | ❌ | ✅ |
-
-**Résultat attendu:** 13 tests passent avec le stack complet
