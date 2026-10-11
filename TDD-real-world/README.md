@@ -80,6 +80,63 @@ Exposer une route GET pour récupérer tous les paniers sauvegardés.
 
 ---
 
+## Tests d'intégration (Repository)
+
+Tester le repository avec une **vraie base PostgreSQL** via Testcontainers/Docker.
+
+Fichier : `api/infra/test/basket.repository.it-spec.ts`
+
+### Tests à implémenter
+
+| # | Test | Description |
+|---|------|-------------|
+| 1 | Sauvegarder un panier | Appeler `save(basket)` → vérifier que le panier ET ses produits sont en BDD |
+| 2 | Supprimer un panier | Insérer 2 paniers → appeler `remove(id1)` → vérifier que seul le panier 2 reste |
+
+### Structure du test
+
+```typescript
+import { startDockerPostgresql, stopDockerPostgresql, resetDB }
+  from "setup-integration-tests/docker-postgresql-manager";
+import knexConfig from "setup-integration-tests/knexfile";
+
+describe("Knex basket repository", () => {
+  let sqlConnection: Knex;
+  let knexBasketRepo: KnexBasketRepository;
+
+  beforeAll(async () => {
+    await startDockerPostgresql();  // 🐳 Lance PostgreSQL
+    sqlConnection = knex(knexConfig.test);
+  });
+
+  afterAll(async () => {
+    await stopDockerPostgresql();   // 🛑 Arrête le container
+  });
+
+  beforeEach(async () => {
+    await resetDB(sqlConnection);   // 🧹 Vide les tables entre chaque test
+    knexBasketRepo = new KnexBasketRepository(sqlConnection);
+  });
+
+  it("can save a basket", async () => {
+    const basket = { id: "...", products: [...], totalPrice: 100 };
+
+    await knexBasketRepo.save(basket);
+
+    // Vérifier directement en BDD
+    const baskets = await sqlConnection("baskets").select("*");
+    expect(baskets).toHaveLength(1);
+  });
+});
+```
+
+### Tables à vérifier
+
+- `baskets` : `id` (UUID), `totalPrice` (integer)
+- `products` : `basketId` (FK), `name`, `quantity`, `price`
+
+---
+
 ## Tests E2E API (Backend)
 
 Utiliser **Supertest** pour tester les routes HTTP.
