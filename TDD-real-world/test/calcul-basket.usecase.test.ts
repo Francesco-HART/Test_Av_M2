@@ -73,7 +73,7 @@ describe("Feature calcul basket", () => {
           new productBuilder().withName("product2").withPrice(10).build(),
           new productBuilder().withName("product2").withPrice(10).build(),
         ],
-        "DISCOUNTPERCENT10"
+        "DISCOUNTPERCENT10",
       );
       const price = 18;
       expect(price).toBe(expectPrice);
@@ -89,7 +89,7 @@ describe("Feature calcul basket", () => {
           new productBuilder().withName("product1").withPrice(10).build(),
           new productBuilder().withName("product2").withPrice(10).build(),
         ],
-        "DISCOUNTEURO10"
+        "DISCOUNTEURO10",
       );
       const price = 10;
       expect(price).toBe(expectPrice);
@@ -108,7 +108,7 @@ describe("Feature calcul basket", () => {
             .withQuantity(2)
             .build(),
         ],
-        "DISCOUNTEURO30"
+        "DISCOUNTEURO30",
       );
       const price = 1;
       expect(price).toBe(expectPrice);
@@ -129,7 +129,7 @@ describe("Feature calcul basket", () => {
             .withQuantity(2)
             .build(),
         ],
-        "ONEFREEPULL"
+        "ONEFREEPULL",
       );
       const price = 10;
       expect(price).toBe(expectPrice);
@@ -150,7 +150,7 @@ describe("Feature calcul basket", () => {
             .withQuantity(2)
             .build(),
         ],
-        "ONEFREEPULL"
+        "ONEFREEPULL",
       );
       const price = 20;
       expect(price).toBe(expectPrice);
@@ -178,7 +178,7 @@ describe("Feature calcul basket", () => {
             .withQuantity(2)
             .build(),
         ],
-        "ONEFREEPULL"
+        "ONEFREEPULL",
       );
       const price = 30;
       expect(price).toBe(expectPrice);
@@ -205,7 +205,7 @@ describe("Feature calcul basket", () => {
             .withQuantity(2)
             .build(),
         ],
-        "ONEFREEPULL"
+        "ONEFREEPULL",
       );
       const price = 30;
       expect(price).toBe(expectPrice);
@@ -229,7 +229,7 @@ describe("Feature calcul basket", () => {
               .withQuantity(1)
               .build(),
           ],
-          "BLACKFRIDAY"
+          "BLACKFRIDAY",
         );
         const price = 10;
         expect(price).toBe(expectPrice);
@@ -252,35 +252,12 @@ describe("Feature calcul basket", () => {
               .withQuantity(1)
               .build(),
           ],
-          "BLACKFRIDAY"
+          "BLACKFRIDAY",
         );
         const price = 20;
         expect(expectPrice).toBe(price);
       });
     });
-
-    // it("Apply black friday reduction with another reduction", async () => {
-    //   givenReductionCodeExist({
-    //     type: "BLACK_FRIDAY",
-    //     amount: 0,
-    //   });
-
-    //   givenNowIs(new Date("2025-11-28T00:00:00Z"));
-
-    //   const expectPrice = await calculPriceUsecase.handle(
-    //     [
-    //       new productBuilder()
-    //         .withName("product1")
-    //         .withType(ProductsType.TSHIRT)
-    //         .withPrice(20)
-    //         .withQuantity(1)
-    //         .build(),
-    //     ],
-    //     ["BLACK_FRIDAY", "DISCOUNT_EURO"]
-    //   );
-    //   const price = 10;
-    //   expect(price).toBe(expectPrice);
-    // });
   });
 
   function givenReductionCodeExist(reductionCode: ReductionType) {
