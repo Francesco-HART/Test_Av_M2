@@ -1,5 +1,5 @@
 import { CalculPriceUsecase } from "../app/calcul-price.usecase";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { productBuilder } from "./product.builder";
 import { StubReductionCodeGateway } from "./stub-reduction-code.gateway";
 import { SaveBasketUsecase } from "../app/save-basket.usecase";
@@ -9,7 +9,7 @@ import { Basket } from "../app/basket.repository";
 import { StubClock } from "./calcul-basket.usecase.test";
 
 export interface EmailNotifier {
-  send(email: { to: string; name: "BASKET_SAVED"; message: string });
+  send(email: { to: string; name: "BASKET_SAVED"; message: string }): void;
 }
 
 export class SpyEmailNotifier implements EmailNotifier {
@@ -17,8 +17,15 @@ export class SpyEmailNotifier implements EmailNotifier {
     | { to: string; name: "BASKET_SAVED"; message: string }
     | undefined;
 
-  send(email: { to: string; name: "BASKET_SAVED"; message: string }) {
+  public emails: {
+    to: string;
+    name: "BASKET_SAVED";
+    message: string;
+  }[] = [];
+
+  send(email: { to: string; name: "BASKET_SAVED"; message: string }): void {
     this.lastEmail = email;
+    this.emails.push(email);
   }
 }
 
@@ -28,18 +35,20 @@ describe("Feature save basket", () => {
   let idGenerator: StubIDGenerator;
   let clock: StubClock;
   let basketRepository: FakeBasketRepository;
-  let spyEmailNotify = new SpyEmailNotifier();
+  let spyEmailNotify: SpyEmailNotifier;
 
   beforeEach(() => {
     reductionsGateway = new StubReductionCodeGateway();
     idGenerator = new StubIDGenerator();
     clock = new StubClock(new Date());
     basketRepository = new FakeBasketRepository();
+    spyEmailNotify = new SpyEmailNotifier();
+
     saveBasketUsecase = new SaveBasketUsecase(
       basketRepository,
       new CalculPriceUsecase(reductionsGateway, clock),
       idGenerator,
-      spyEmailNotify
+      spyEmailNotify,
     );
   });
 
@@ -72,7 +81,24 @@ describe("Feature save basket", () => {
 
       await saveBasketUsecase.handle(userEmail, products);
 
-      thenEventShouldBe({
+      thenEmailShouldBe({
+        name: "BASKET_SAVED",
+        to: userEmail,
+        message: "Profitez de 10% de réduction avec le code DISCOUNT10",
+      });
+    });
+
+    // Test avec un vrai spy
+    it("should call email notifier exactly once when basket is saved", async () => {
+      const sendSpy = vi.spyOn(spyEmailNotify, "send");
+      const userEmail = "bob@bob.fr";
+      const products = [
+        new productBuilder().withQuantity(1).withPrice(1).build(),
+      ];
+
+      await saveBasketUsecase.handle(userEmail, products);
+
+      expect(sendSpy).toHaveBeenCalledExactlyOnceWith({
         name: "BASKET_SAVED",
         to: userEmail,
         message: "Profitez de 10% de réduction avec le code DISCOUNT10",
@@ -88,7 +114,7 @@ describe("Feature save basket", () => {
     expect(basketRepository.baskets).toEqual(basket);
   }
 
-  function thenEventShouldBe({
+  function thenEmailShouldBe({
     message,
     to,
     name,
@@ -98,7 +124,7 @@ describe("Feature save basket", () => {
     name: "BASKET_SAVED";
   }) {
     expect(spyEmailNotify.lastEmail).toEqual({
-      name: name,
+      name,
       to,
       message,
     });
